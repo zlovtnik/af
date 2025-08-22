@@ -1,98 +1,75 @@
 from datetime import datetime, timedelta
-
 from airflow import DAG
-from airflow.operators.email import EmailOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.utils import timezone
+from airflow.operators.bash import BashOperator
 
-from dags.utils.report_utils import (compute_indicators_from_df,
-                                     generate_csv_report, results_to_df)
-
+# Default arguments for the DAG
 default_args = {
-    "owner": "airflow_user",
-    "depends_on_past": False,
-    "start_date": datetime(2025, 8, 21),
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 3,
-    "retry_delay": timedelta(minutes=5),
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
 }
 
+# Define the DAG
 dag = DAG(
-    "sql_report_generation",
+    'simple_report_dag',
     default_args=default_args,
-    description="Run SQL queries, compute indicators, and generate report",
-    schedule_interval="@daily",
+    description='A simple report generation DAG',
+    schedule=timedelta(days=1),
     catchup=False,
+    tags=['example', 'report'],
 )
 
+def generate_simple_report():
+    """Generate a simple report"""
+    import pandas as pd
+    from datetime import datetime
 
-# Task 1: Run SQL Query (push results to XCom)
-run_query = PostgresOperator(
-    task_id="run_sql_query",
-    postgres_conn_id="my_db",
-    sql="""
-        SELECT date, revenue FROM sales WHERE date >= '{{ ds }}' - INTERVAL '7 days';
-    """,
-    do_xcom_push=True,
+    # Create sample data
+    data = {
+        'date': [datetime.now().strftime('%Y-%m-%d')],
+        'records_processed': [100],
+        'status': ['completed']
+    }
+
+    df = pd.DataFrame(data)
+    print("Report generated successfully!")
+    print(df.to_string(index=False))
+    return "Report generation completed"
+
+def cleanup_files():
+    """Cleanup temporary files"""
+    print("Cleaning up temporary files...")
+    return "Cleanup completed"
+
+# Define tasks
+hello_task = BashOperator(
+    task_id='say_hello',
+    bash_command='echo "Hello from Airflow DAG! Starting report generation..."',
     dag=dag,
 )
 
-
-def compute_indicators_task(**context):
-    ti = context["ti"]
-    query_results = ti.xcom_pull(task_ids="run_sql_query")
-    # Convert to DataFrame; PostgresOperator typically returns list of tuples
-    df = results_to_df(query_results, columns=["date", "revenue"])
-    indicators = compute_indicators_from_df(df)
-    ti.xcom_push(key="indicators", value=indicators)
-    # Also push the dataframe rows for chart generation later
-    ti.xcom_push(key="query_rows", value=query_results)
-    return indicators
-
-
-compute_task = PythonOperator(
-    task_id="compute_indicators",
-    python_callable=compute_indicators_task,
-    provide_context=True,
+generate_report_task = PythonOperator(
+    task_id='generate_report',
+    python_callable=generate_simple_report,
     dag=dag,
 )
 
-
-def generate_report_task(**context):
-    ti = context["ti"]
-    indicators = ti.xcom_pull(key="indicators", task_ids="compute_indicators")
-    # Use execution date in filename to avoid collisions
-    exec_date = context.get("ds_nodash") or timezone.utcnow().strftime("%Y%m%d")
-    report_path = f"/tmp/report_{exec_date}.csv"
-    # reconstruct dataframe from xcom rows if available for charting
-    query_rows = ti.xcom_pull(key="query_rows", task_ids="compute_indicators")
-    df = results_to_df(query_rows, columns=["date", "revenue"])
-    paths = generate_csv_report(indicators, report_path, df=df)
-    ti.xcom_push(key="report_path", value=paths.get("csv"))
-    ti.xcom_push(key="chart_path", value=paths.get("chart"))
-    return paths
-
-
-generate_task = PythonOperator(
-    task_id="generate_report",
-    python_callable=generate_report_task,
-    provide_context=True,
+cleanup_task = PythonOperator(
+    task_id='cleanup',
+    python_callable=cleanup_files,
     dag=dag,
 )
 
-
-# Optional: send report by email if you configure SMTP in Airflow
-email_task = EmailOperator(
-    task_id="send_report",
-    to="you@example.com",
-    subject="Daily SQL Report",
-    html_content='Report generated. Indicators: {{ ti.xcom_pull(key="indicators") }}',
-    files=['{{ ti.xcom_pull(key="report_path") }}'],
+goodbye_task = BashOperator(
+    task_id='say_goodbye',
+    bash_command='echo "Report DAG completed successfully!"',
     dag=dag,
 )
 
-
-# Define dependencies
-run_query >> compute_task >> generate_task >> email_task
+# Define task dependencies
+hello_task >> generate_report_task >> cleanup_task >> goodbye_task
