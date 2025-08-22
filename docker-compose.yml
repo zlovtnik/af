@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  airflow:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/app/dags
+      - ./tests:/app/tests
+      - ./airflow.db:/app/airflow.db
+      - ./airflow.cfg:/app/airflow.cfg
+    environment:
+      - AIRFLOW_HOME=/app
+      - AIRFLOW__CORE__DAGS_FOLDER=/app/dags
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    container_name: airflow_dev
+
+  airflow-test:
+    build: .
+    volumes:
+      - ./dags:/app/dags
+      - ./tests:/app/tests
+    environment:
+      - AIRFLOW_HOME=/app
+      - AIRFLOW__CORE__DAGS_FOLDER=/app/dags
+    container_name: airflow_test
+    profiles:
+      - testing
