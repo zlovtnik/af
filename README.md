@@ -135,9 +135,19 @@ The Docker setup uses the following key environment variables (defined in Docker
 - `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////app/airflow.db` - SQLite database
 
 ### Default Credentials
-- **Username**: admin
-- **Password**: admin
-- **Web Interface**: http://localhost:8080
+The Airflow system generates a random password for the admin user on first initialization. To find your password:
+
+1. **Check the generated password file**:
+```bash
+cat simple_auth_manager_passwords.json.generated
+```
+
+2. **Your credentials will be**:
+   - **Username**: admin  
+   - **Password**: [check the generated file - it will be a random string like `Hp3YkbakNbxFt7py`]
+   - **Web Interface**: http://localhost:8080
+
+Note: The password is randomly generated each time Airflow initializes, so it will be different for each setup.
 
 ## Troubleshooting
 
