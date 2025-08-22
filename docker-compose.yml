@@ -6,26 +6,38 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./dags:/app/dags
-      - ./tests:/app/tests
-      - ./airflow.db:/app/airflow.db
-      - ./airflow.cfg:/app/airflow.cfg
+      - ./dags:/app/dags:ro
+      - ./tests:/app/tests:ro
+      - ./airflow.cfg:/app/airflow.cfg:ro
+      - airflow_logs:/app/logs
     environment:
       - AIRFLOW_HOME=/app
       - AIRFLOW__CORE__DAGS_FOLDER=/app/dags
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////app/airflow.db
+      - AIRFLOW__LOGGING__BASE_LOG_FOLDER=/app/logs
+      - AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/app/logs/dag_processor_manager.log
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - AIRFLOW_CONFIG=/app/airflow.cfg
     container_name: airflow_dev
 
   airflow-test:
     build: .
     volumes:
-      - ./dags:/app/dags
-      - ./tests:/app/tests
+      - ./dags:/app/dags:ro
+      - ./tests:/app/tests:ro
+      - ./airflow.cfg:/app/airflow.cfg:ro
     environment:
       - AIRFLOW_HOME=/app
       - AIRFLOW__CORE__DAGS_FOLDER=/app/dags
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__LOGGING__BASE_LOG_FOLDER=/app/logs
+      - AIRFLOW_CONFIG=/app/airflow.cfg
     container_name: airflow_test
     profiles:
       - testing
+
+volumes:
+  airflow_logs:
