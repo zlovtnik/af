@@ -14,8 +14,7 @@ def another_task():
 # Create the DAG
 with DAG(
     'hello_world_dag',
-    description='A simple hello world DAG',
-    schedule_interval='@daily',
+    description='A simple hello world DAG', schedule ='@daily',
     start_date=datetime(2024, 1, 1),
     catchup=False,
     tags=['example', 'hello'],
