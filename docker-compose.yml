@@ -32,7 +32,7 @@ services:
       - AIRFLOW__CORE__DAGS_FOLDER=/app/dags
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
-      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////app/airflow.db
       - AIRFLOW__LOGGING__BASE_LOG_FOLDER=/app/logs
       - AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/app/logs/dag_processor_manager.log
@@ -61,6 +61,7 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__LOGGING__BASE_LOG_FOLDER=/app/logs
       - AIRFLOW_CONFIG=/app/airflow.cfg
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - ORACLE_CONN_ID=oracle_default
       - ORACLE_HOST=oracle
       - ORACLE_PORT=1521
