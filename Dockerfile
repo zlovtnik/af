@@ -7,7 +7,7 @@ ENV PYTHONPATH=/app
 ENV AIRFLOW__CORE__DAGS_FOLDER=/app/dags
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False
 ENV AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
-ENV AIRFLOW__CORE__EXECUTOR=LocalExecutor
+ENV AIRFLOW__CORE__EXECUTOR=SequentialExecutor
 ENV AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////app/airflow.db
 ENV AIRFLOW__LOGGING__BASE_LOG_FOLDER=/app/logs
 ENV AIRFLOW__LOGGING__DAG_PROCESSOR_MANAGER_LOG_LOCATION=/app/logs/dag_processor_manager.log
@@ -17,35 +17,20 @@ ENV AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including Oracle Instant Client
+# Install system dependencies 
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     wget \
     unzip \
-    libaio1 \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Oracle Instant Client
-RUN mkdir -p /opt/oracle && \
-    cd /opt/oracle && \
-    wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basic-linux.x64-23.4.0.24.05.zip && \
-    unzip instantclient-basic-linux.x64-23.4.0.24.05.zip && \
-    rm instantclient-basic-linux.x64-23.4.0.24.05.zip && \
-    echo /opt/oracle/instantclient_23_4 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
-    ldconfig
-
-# Set Oracle environment variables
-ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4:$LD_LIBRARY_PATH
-ENV TNS_ADMIN=/opt/oracle/instantclient_23_4
-ENV ORACLE_HOME=/opt/oracle/instantclient_23_4
 
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies with verbose output
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -v -r requirements.txt
 
 # Create airflow user and set permissions before copying files
 RUN useradd -m -s /bin/bash airflow && \
