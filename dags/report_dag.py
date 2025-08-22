@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.providers.oracle.hooks.oracle import OracleHook
 
 # Default arguments for the DAG
 default_args = {
@@ -16,30 +17,76 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    'simple_report_dag',
+    'oracle_report_dag',
     default_args=default_args,
-    description='A simple report generation DAG',
+    description='Oracle-based report generation DAG',
     schedule=timedelta(days=1),
     catchup=False,
-    tags=['example', 'report'],
+    tags=['oracle', 'report'],
 )
 
-def generate_simple_report():
-    """Generate a simple report"""
+def generate_oracle_report():
+    """Generate a report using Oracle database data"""
     import pandas as pd
     from datetime import datetime
 
-    # Create sample data
-    data = {
-        'date': [datetime.now().strftime('%Y-%m-%d')],
-        'records_processed': [100],
-        'status': ['completed']
-    }
+    try:
+        # Connect to Oracle and fetch data from DUAL
+        oracle_hook = OracleHook(
+            oracle_conn_id='oracle_default',
+            thick_mode=False
+        )
+        
+        # Create a comprehensive report query using DUAL
+        sql = """
+        SELECT 
+            'Oracle Report' as report_type,
+            SYSDATE as report_timestamp,
+            USER as database_user,
+            SYS_CONTEXT('USERENV', 'DB_NAME') as database_name,
+            1000 + ROUND(DBMS_RANDOM.VALUE(1, 999)) as records_processed,
+            'completed' as status
+        FROM DUAL
+        """
+        
+        result = oracle_hook.get_first(sql)
+        
+        # Create DataFrame from Oracle data
+        data = {
+            'report_type': [result[0]],
+            'report_timestamp': [result[1]],
+            'database_user': [result[2]],
+            'database_name': [result[3]],
+            'records_processed': [result[4]],
+            'status': [result[5]]
+        }
 
-    df = pd.DataFrame(data)
-    print("Report generated successfully!")
-    print(df.to_string(index=False))
-    return "Report generation completed"
+        df = pd.DataFrame(data)
+        print("Oracle Report generated successfully!")
+        print(df.to_string(index=False))
+        
+        # Additional Oracle system information
+        version_sql = "SELECT BANNER FROM V$VERSION WHERE ROWNUM = 1"
+        version_result = oracle_hook.get_first(version_sql)
+        print(f"\nOracle Database Version: {version_result[0]}")
+        
+        return "Oracle report generation completed"
+        
+    except Exception as e:
+        print(f"Error generating Oracle report: {str(e)}")
+        # Fallback to local data if Oracle is not available
+        data = {
+            'report_type': ['Fallback Report'],
+            'report_timestamp': [datetime.now()],
+            'database_user': ['N/A'],
+            'database_name': ['N/A'],
+            'records_processed': [100],
+            'status': ['completed_fallback']
+        }
+        df = pd.DataFrame(data)
+        print("Fallback report generated!")
+        print(df.to_string(index=False))
+        return "Fallback report generation completed"
 
 def cleanup_files():
     """Cleanup temporary files"""
@@ -49,13 +96,13 @@ def cleanup_files():
 # Define tasks
 hello_task = BashOperator(
     task_id='say_hello',
-    bash_command='echo "Hello from Airflow DAG! Starting report generation..."',
+    bash_command='echo "Hello from Airflow DAG! Starting Oracle report generation..."',
     dag=dag,
 )
 
 generate_report_task = PythonOperator(
-    task_id='generate_report',
-    python_callable=generate_simple_report,
+    task_id='generate_oracle_report',
+    python_callable=generate_oracle_report,
     dag=dag,
 )
 
@@ -67,7 +114,7 @@ cleanup_task = PythonOperator(
 
 goodbye_task = BashOperator(
     task_id='say_goodbye',
-    bash_command='echo "Report DAG completed successfully!"',
+    bash_command='echo "Oracle Report DAG completed successfully!"',
     dag=dag,
 )
 

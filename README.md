@@ -1,11 +1,20 @@
-# Apache Airflow Project
+# Apache Airflow with Oracle Database Project
 
-A Docker-based Apache Airflow development environment with automated setup and common development commands.
+A Docker-based Apache Airflow development environment with Oracle Database integration using Oracle AI free image.
 
 ## Prerequisites
 
 - Docker and Docker Compose installed on your system
 - Make utility (available on macOS/Linux by default)
+- At least 8GB of RAM (Oracle database requires significant memory)
+
+## Oracle Database Features
+
+This project includes:
+- Oracle Database Free 23c container
+- Airflow DAGs that connect to Oracle and query DUAL table
+- Automatic Oracle connection setup
+- Sample Oracle-based reporting DAG
 
 ## Quick Start
 
@@ -14,7 +23,7 @@ A Docker-based Apache Airflow development environment with automated setup and c
 # Clone the repository and navigate to the project directory
 cd /path/to/your/af/project
 
-# Build Docker image and initialize Airflow database
+# Build Docker image and initialize Airflow database with Oracle
 make setup
 ```
 
@@ -68,6 +77,14 @@ Run `make help` to see all available commands, or use any of the commands below:
 ### Utilities
 - `make check-deps` - Check for dependency issues
 - `make setup` - Complete development environment setup
+
+### Oracle Database Operations
+- Oracle Database runs on port 1521 (database) and 5500 (Enterprise Manager)
+- Default connection: `system/OraclePassword123@localhost:1521/FREEPDB1`
+- The setup script automatically creates the Airflow connection `oracle_default`
+- To manually set up Oracle connection: `./setup_oracle_connection.sh`
+
+```
 
 ## Project Structure
 

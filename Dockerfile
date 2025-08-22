@@ -17,11 +17,28 @@ ENV AIRFLOW__LOGGING__LOGGING_LEVEL=INFO
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including Oracle Instant Client
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    wget \
+    unzip \
+    libaio1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Oracle Instant Client
+RUN mkdir -p /opt/oracle && \
+    cd /opt/oracle && \
+    wget https://download.oracle.com/otn_software/linux/instantclient/2340000/instantclient-basic-linux.x64-23.4.0.24.05.zip && \
+    unzip instantclient-basic-linux.x64-23.4.0.24.05.zip && \
+    rm instantclient-basic-linux.x64-23.4.0.24.05.zip && \
+    echo /opt/oracle/instantclient_23_4 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    ldconfig
+
+# Set Oracle environment variables
+ENV LD_LIBRARY_PATH=/opt/oracle/instantclient_23_4:$LD_LIBRARY_PATH
+ENV TNS_ADMIN=/opt/oracle/instantclient_23_4
+ENV ORACLE_HOME=/opt/oracle/instantclient_23_4
 
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt .
@@ -68,6 +85,9 @@ if [ ! -f "/app/airflow.db" ]; then\n\
         --role Admin \\\n\
         --email admin@example.com \\\n\
         --password admin || true\n\
+    \n\
+    echo "Setting up Oracle connection..."\n\
+    python /app/init_oracle_connection.py || true\n\
 fi\n\
 \n\
 exec "$@"' > /app/entrypoint.sh && \

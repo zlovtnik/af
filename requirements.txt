@@ -2,10 +2,13 @@
 apache-airflow>=2.10.0
 
 # Database providers
-apache-airflow-providers-postgres>=5.0.0
+apache-airflow-providers-oracle>=3.0.0
 
 # Data processing
 pandas>=1.5.0
+
+# Oracle client library
+cx-Oracle>=8.3.0
 
 # Testing
 pytest>=7.0.0
