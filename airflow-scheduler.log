@@ -1,6 +1,0 @@
-2025-08-21 21:42:02,398 INFO - Starting the scheduler
-2025-08-21 21:42:02,399 INFO - Loaded executor: :LocalExecutor:
-2025-08-21 21:42:02,407 INFO - Adopting or resetting orphaned tasks for active dag runs
-2025-08-21 21:44:33,897 INFO - Exiting gracefully upon receiving signal 15
-2025-08-21 21:44:33,898 INFO - Shutting down LocalExecutor; waiting for running tasks to finish.  Signal again if you don't want to wait.
-2025-08-21 21:44:33,898 INFO - Exited execute loop

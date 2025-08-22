@@ -1,9 +1,0 @@
-[2025-08-21 21:42:03 -0400] [28486] [INFO] Starting gunicorn 23.0.0
-[2025-08-21 21:42:03 -0400] [28486] [INFO] Listening at: http://[::]:8793 (28486)
-[2025-08-21 21:42:03 -0400] [28486] [INFO] Using worker: sync
-[2025-08-21 21:42:03 -0400] [28495] [INFO] Booting worker with pid: 28495
-[2025-08-21 21:42:03 -0400] [28496] [INFO] Booting worker with pid: 28496
-[2025-08-21 21:44:33 -0400] [28486] [INFO] Handling signal: term
-[2025-08-21 21:44:33 -0400] [28496] [INFO] Worker exiting (pid: 28496)
-[2025-08-21 21:44:33 -0400] [28495] [INFO] Worker exiting (pid: 28495)
-[2025-08-21 21:44:34 -0400] [28486] [INFO] Shutting down: Master
